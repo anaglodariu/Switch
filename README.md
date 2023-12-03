@@ -30,8 +30,8 @@ toate celelalte switch-uri, altfel se face flooding
       - in functia 'create_bpdu_message' se creeaza pachetele bpdu, completand doar adresa mac a sender-ului, adresa destinatie multicast specifica, campurile din llc_header, llc_length, prioritatea lui root bridge, cea a sender-ului si costul, restul campurilor sunt zerorizate
       - functia 'parse_bpdu' parseaza pachetele bpdu si intoarce valorile celor 3 campuri care ne intereseaza: root_bridge_ID, root_path_cost, sender_bridge_ID
       - in functia 'receive_bpdu':
-	- daca pe baza celor 3 campuri care ne intereseaza din pachetul bpdu primit, prioritatea switch-ului care a primit pachetul este mai mare    		  decat cel din pachet, va retine si el ca sender-ul este root bridge si isi va actualiza costul catre el
-                - daca switch-ul destinatie nu mai este root bridge (la inceput toate switch-urile cred ca sunt root bridge), atunci se actualizeaza starea 		  porturilor: toate porturile trunk in afara de cel pe care a venit pachetul va fi pus pe blocked
+      - daca pe baza celor 3 campuri care ne intereseaza din pachetul bpdu primit, prioritatea switch-ului care a primit pachetul este mai mare decat cel din pachet, va retine si el ca sender-ul este root bridge si isi va actualiza costul catre el:
+        	- daca switch-ul destinatie nu mai este root bridge (la inceput toate switch-urile cred ca sunt root bridge), atunci se actualizeaza starea 		  porturilor: toate porturile trunk in afara de cel pe care a venit pachetul va fi pus pe blocked
                 - switch-ul va trimite pachetul si la celelalte switch-uri pentru a le anunta cine este root bridge-ul
                 - daca sender-ul pachetului are prioritate mai mare decat switch-ul care primeste pachetul, se da discard la pachet
 
