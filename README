@@ -1,4 +1,4 @@
-##Implementare tema
+Implementare tema
 - completarea tabelei de comutare
   - cand switch-ul primeste un cadru Ethernet, parseaza pachetul si realizeaza procesul de completare a tabelei CAM in functia 'MAC_address_learning'
   - in functia 'MAC_address_learning' se adauga in dictionarul SW_CAM o intrare in care leaga interfata pe care e venit pachetul de adresa MAC sursa din header-ul Ethernet
