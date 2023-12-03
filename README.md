@@ -1,1 +1,38 @@
+## Implementare Switch
+
+**Completarea tabelei de comutare:**
+  - cand switch-ul primeste un cadru Ethernet, parseaza pachetul si realizeaza procesul de completare a tabelei CAM in functia 'MAC_address_learning'
+  - in functia 'MAC_address_learning' se adauga in dictionarul SW_CAM o intrare in care leaga interfata pe care e venit pachetul de adresa MAC sursa din header-ul Ethernet
+  - in dictionarul SW_CAM se folosesc adresele mac destinatie ca chei pentru ca sunt unice
+  - se verifica tipul adresei MAC destinatie din header-ul Ethernet
+(unicast, multicast, broadcast), iar daca adresa exista deja ca cheie in SW_CAM atunci nu se mai face flooding catre
+toate celelalte switch-uri, altfel se face flooding
+
+**Vlan:**
+  - pentru implementarea de mai devreme, se adauga si cea de vlan
+  - functia 'getVLANInterface' va cauta in fisierul de configuratie al switch-ului corespunzator si va returna tipul de interfata pe care a venit pachetul (va returna un str)
+  - functia 'getVLANInterface' este aplicata atat pe interfata pe care e venit pachetul, cat si pe interfata pe care va pleca, pentru a verifica daca trebuie modificat pachetul, adaugand sau scotand tagul de vlan
+  - functia 'to-send-or-not-to-send' verifica daca putem trimite pachetul mai departe, adica daca destinatarul se afla in acelasi vlan sau urmeaza o interfata de tip trunk
+  - dupa daca s-a stabilit ca se poate trimite pachetul mai departe, se creeaza pachetul nou in functie de interfete: 
+      - daca ambele interfete sunt de tip trunk, se trimite pachetul nemodificat
+      - daca ambele interfete sunt de tip access si au aceeasi valoare, se trimite pachetul nemodificat
+      - daca interfata de pe care a venit pachetul este de tip trunk si pleaca pe una de tip access, se scoate tag-ul din pachet
+      - daca interfata pe care a venit pachetul este de tip access si pleaca pe una de tip trunk, se adauga tag-ul corespunzator vlan-ului interfetei pe care a venit pachetul
+
+**STP:**
+  - peste implementarile de vlan si tabela CAM se adauga cea de stp, adica dupa ce ce stabilesc porturile blocate si cele care asculta, pachetele vor fi trimise doar pe porturile trunk care nu sunt blocate in functia 'MAC_address_learning'
+  - stabilirea starii porturilor de tip trunk:
+      - pentru fiecare switch vom retine in variabile globale starile porturilor (in dictionarul ports), propriul BID / prioritate (own_bridge_id),
+	costul pana la root bridge (root_path_cost), BID-ul / prioritatea lui root bridge (root_bridge_id)
+      - in functia 'initSwitch' fiecare switch este considerat root bridge, deci toate porturile trunk sunt puse pe listening si sunt initializate variabilele globale
+      - toate porturile unui switch sunt puse pe listening cu functia 'setListening'
+      - la fiecare secunda, daca switch-ul e root bridge, va trimite pachete bpdu pe toate porturile trunk cu informatiile retinute in variabilele globale
+      - in functia 'create_bpdu_message' se creeaza pachetele bpdu, completand doar adresa mac a sender-ului, adresa destinatie multicast specifica, campurile din llc_header, llc_length, prioritatea lui root bridge, cea a sender-ului si costul, restul campurilor sunt zerorizate
+      - functia 'parse_bpdu' parseaza pachetele bpdu si intoarce valorile celor 3 campuri care ne intereseaza: root_bridge_ID, root_path_cost, sender_bridge_ID
+      - in functia 'receive_bpdu':
+	- daca pe baza celor 3 campuri care ne intereseaza din pachetul bpdu primit, prioritatea switch-ului care a primit pachetul este mai mare    		  decat cel din pachet, va retine si el ca sender-ul este root bridge si isi va actualiza costul catre el
+                - daca switch-ul destinatie nu mai este root bridge (la inceput toate switch-urile cred ca sunt root bridge), atunci se actualizeaza starea 		  porturilor: toate porturile trunk in afara de cel pe care a venit pachetul va fi pus pe blocked
+                - switch-ul va trimite pachetul si la celelalte switch-uri pentru a le anunta cine este root bridge-ul
+                - daca sender-ul pachetului are prioritate mai mare decat switch-ul care primeste pachetul, se da discard la pachet
+
 
